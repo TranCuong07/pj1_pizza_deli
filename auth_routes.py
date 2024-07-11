@@ -75,4 +75,4 @@ async def refresh(authorize: AuthJWT = Depends()):
         response = {"new_access_token": access_token}
         return jsonable_encoder (response)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không xác định được token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Khong xa dinh duoc token")

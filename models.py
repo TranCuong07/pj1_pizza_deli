@@ -33,7 +33,7 @@ class Order(Base):
 
     __tablename__ = "Order" #tao bang orders
     id = Column(Integer,primary_key=True)
-    quantity = Column(Integer,unique=False)
+    quantity = Column(Integer)
     order_status = Column(ChoiceType(choices=ORDER_STATUS),default="PENDING")
     pizza_size = Column(ChoiceType(choices=PIZZA_SIZE),default="SMALL")
     user_id = Column(Integer,ForeignKey('User.id'))
