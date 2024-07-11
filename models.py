@@ -11,7 +11,7 @@ class User(Base):
     password = Column(String,nullable=True)
     is_active = Column(Boolean,default=False)
     is_staff = Column(Boolean,default=False)
-    Orders = relationship('Orders',back_populates='User') #tao moi lien ket user vs order
+    Orders = relationship('Order',back_populates='User') #tao moi lien ket user vs order
     
     def __repr__(self):
         return f"<User {self.username}?"
@@ -31,9 +31,9 @@ class Order(Base):
         ('EXTRA-LARGE', 'extra-large')
     ]
 
-    __tablename__ = "Orders" #tao bang orders
+    __tablename__ = "Order" #tao bang orders
     id = Column(Integer,primary_key=True)
-    quantity = Column(Integer,unique=True)
+    quantity = Column(Integer,unique=False)
     order_status = Column(ChoiceType(choices=ORDER_STATUS),default="PENDING")
     pizza_size = Column(ChoiceType(choices=PIZZA_SIZE),default="SMALL")
     user_id = Column(Integer,ForeignKey('User.id'))

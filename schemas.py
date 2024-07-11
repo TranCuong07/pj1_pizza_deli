@@ -10,8 +10,8 @@ class SignUpModel(BaseModel):
     is_active: Optional[bool]
 
     class Config:
-        from_attributes = True
-        json_schema_extra = {
+        orm_mode=True
+        schema_extra = {
             'example': {
                 "username": "johndoe",
                 "email": "johndoe@gmail.com",
@@ -20,3 +20,11 @@ class SignUpModel(BaseModel):
                 "is_active": True
             }
         }
+
+class Setting(BaseModel):
+    authjwt_secret_key: str ='c81b9060d8051ec08ded9b5e92af08b6521fc975c6b5ac45be0bfff0b5d7ac8a'
+
+class LoginModel(BaseModel):
+    username: str
+    password: str
+
