@@ -1,5 +1,5 @@
 from fastapi import FastAPI,Depends
-from order_routes import order_routes
+from order_routes import order_router
 from auth_routes import auth_routes
 from fastapi_jwt_auth import AuthJWT
 from schemas import Setting
@@ -65,6 +65,6 @@ def get_config():
 
 
 
-app.include_router(order_routes, prefix="/order")
+app.include_router(order_router, prefix="/order")
 app.include_router(auth_routes, prefix="/auth")
 
