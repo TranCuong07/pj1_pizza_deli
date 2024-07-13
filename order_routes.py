@@ -4,7 +4,7 @@ from fastapi_jwt_auth import AuthJWT
 from models import User,Order
 from database import Session , engine
 from fastapi.encoders import jsonable_encoder
-from schemas import OrderModel
+from schemas import OrderModel,OrderModelStatus
 
 session=Session(bind=engine)
 order_router = APIRouter()
@@ -116,4 +116,87 @@ async def get_user_orders(authorize:AuthJWT=Depends()):
         #tra ve oerder theo khach hang
     return jsonable_encoder(user.orders)
 
+#update order
+@order_router.put('/order/update/{order_id}/')
+async def update_order(id:int,order:OrderModel,authorize:AuthJWT=Depends()):
+    try: #check token
+        authorize.jwt_required()
+    except Exception as e:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khong xac thuc duoc token"
+            )
+    current_user = authorize.get_jwt_subject()
+    order_to_update = session.query(Order).filter(Order.id==id).first() #lay order theo id
+    if not order_to_update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="khong tim thay order"
+            )
 
+    order_to_update.quantity = order.quantity
+    order_to_update.pizza_size = order.pizza_size
+    session.commit()
+    return jsonable_encoder(order_to_update)
+
+
+# update order status
+@order_router.put('/order/status/{order_id}/')
+async def update_order_status(id:int,order:OrderModelStatus,authorize:AuthJWT=Depends()):
+    try: #check token
+        authorize.jwt_required()
+    except Exception as e:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khong xac thuc duoc token"
+            )
+    current_user = authorize.get_jwt_subject()
+    user = session.query(User).filter(User.username==current_user).first()
+    if not user or not user.is_staff: #check phai la nhan vien khong
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Khong phai nhan vien"
+        )
+    order_to_update_status = session.query(Order).filter(Order.id==id).first() #lay order theo id
+    if not order_to_update_status:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="khong tim thay order"
+            )
+    order_to_update_status.order_status = order.order_status
+    session.commit()
+    response= {
+        "pizza_size":order_to_update_status.pizza_size,
+        "quantity":order_to_update_status.quantity,
+        "order_status":order_to_update_status.order_status,
+    }
+    return jsonable_encoder(response)
+
+@order_router.delete('/order/delete/{id}/',status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order(id:int,authorize:AuthJWT=Depends()):
+    try: #check token
+        authorize.jwt_required()
+    except Exception as e:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khong xac thuc duoc token"
+            )
+    current_user = authorize.get_jwt_subject()
+    user = session.query(User).filter(User.username==current_user).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="tai khoan khong ton tai"
+        )
+    order_to_delete = session.query(Order).filter(Order.id==id).first() #lay order theo id
+    if not order_to_delete:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="khong tim thay order"
+        )
+    session.delete(order_to_delete)
+    session.commit()
+    response= {
+       "Message":"Xoa thanh cong"
+    }
+    return jsonable_encoder(order_to_delete)
