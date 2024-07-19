@@ -18,7 +18,6 @@ This is a REST API for a Pizza delivery service built for learning with FastAPI,
 | *GET* | ```/docs/``` | _View API documentation_|_All users_|
 
 ## How to run the Project
-- Install Postgreql
 - Install Python
 - Git clone the project with ``` git clone https://github.com/TranCuong07/pj1_pizza_deli```
 - Create your virtualenv with `Pipenv` or `virtualenv` and activate it.
