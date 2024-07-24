@@ -19,7 +19,7 @@ async def hello(authorize:AuthJWT=Depends()):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Khong xa thuc duoc token"
         )
-    return {"Message":"Hello mother fucker"}
+    return {"Message":"Hello"}
 
 @order_router.post('/order',status_code=status.HTTP_201_CREATED)
 async def place_an_order(order:OrderModel,authorize:AuthJWT=Depends()):
