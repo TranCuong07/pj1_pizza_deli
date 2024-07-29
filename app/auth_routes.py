@@ -59,11 +59,11 @@ async def login(user:LoginModel,authorize:AuthJWT=Depends()):
             return jsonable_encoder(response)
         
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Tai khoan khong ton tai"
+                            detail="Tài khoản không tồn tại hoặc mật khẩu không đúng"
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Ket noi loi"
+                            detail="Kết nối lỗi hoặc lỗi không xác định"
                             )
 
 @auth_routes.get('/refresh')
@@ -75,4 +75,4 @@ async def refresh(authorize: AuthJWT = Depends()):
         response = {"new_access_token": access_token}
         return jsonable_encoder (response)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Khong xa dinh duoc token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Khong xac dinh duoc token")

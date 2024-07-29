@@ -1,25 +1,18 @@
-from fastapi import FastAPI,Depends
-from order_routes import order_router
-from auth_routes import auth_routes
-from fastapi_jwt_auth import AuthJWT
-from schemas import Setting
 import re
 import inspect
 from fastapi.routing import APIRoute
 from fastapi.openapi.utils import get_openapi
+from fastapi import FastAPI
 
-
-app = FastAPI()
-
-def custom_openapi():
+def custom_openapi(app: FastAPI):
     if app.openapi_schema:
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title = "Pizza Delivery API",
-        version = "1.0",
-        description = "An API for a Pizza Delivery Service",
-        routes = app.routes,
+        title="Pizza Delivery API",
+        version="1.0",
+        description="An API for a Pizza Delivery Service",
+        routes=app.routes,
     )
 
     openapi_schema["components"]["securitySchemes"] = {
@@ -27,20 +20,18 @@ def custom_openapi():
             "type": "apiKey",
             "in": "header",
             "name": "Authorization",
-            "description": "Enter: **'Bearer &lt;JWT&gt;'**, where JWT is the access token"
+            "description": "Enter: **'Bearer <JWT>'**, where JWT is the access token"
         }
     }
 
-    # Get all routes where jwt_optional() or jwt_required
     api_router = [route for route in app.routes if isinstance(route, APIRoute)]
 
     for route in api_router:
         path = getattr(route, "path")
-        endpoint = getattr(route,"endpoint")
+        endpoint = getattr(route, "endpoint")
         methods = [method.lower() for method in getattr(route, "methods")]
 
         for method in methods:
-            # access_token
             if (
                 re.search("jwt_required", inspect.getsource(endpoint)) or
                 re.search("fresh_jwt_required", inspect.getsource(endpoint)) or
@@ -54,17 +45,3 @@ def custom_openapi():
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
-
-
-app.openapi = custom_openapi
-
-
-@AuthJWT.load_config
-def get_config():
-    return Setting()
-
-
-
-app.include_router(order_router, prefix="/order")
-app.include_router(auth_routes, prefix="/auth")
-
