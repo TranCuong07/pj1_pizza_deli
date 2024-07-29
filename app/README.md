@@ -24,4 +24,4 @@ This is a REST API for a Pizza delivery service built for learning with FastAPI,
 - Install the requirements with ``` pip install -r requirements.txt ```
 - Set Up your PostgreSQL database and set its URI in your ```database.py```
 - run the API
-``` uvicorn main:app ``
+``` uvicorn main:app ```
