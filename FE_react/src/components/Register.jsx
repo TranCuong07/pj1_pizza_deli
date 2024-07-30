@@ -62,8 +62,33 @@ const Register = () =>{
     ]
 
 
-    const handleSubmit = (e) =>{
+    const handleSubmit = async (e) =>{
         e.preventDefault();
+        try {
+            const response = await fetch ("http://localhost:8000/auth/signup",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(values)
+                });
+
+                if(response.ok){
+                    const data = await response.json();
+                    //console.log(data);
+                    alert(`success`);
+                }
+                else{
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail);
+                }
+        }
+        catch (error){
+            console.error("Error:", error.message);
+            alert(`Login failed: ${error.message}`);
+        }
+
     };
 
     const onChange = (e) => {

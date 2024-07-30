@@ -49,6 +49,7 @@ const Login = () =>{
                     const data = await response.json();
                     localStorage.setItem('token', data.acces_token) // luu token
                     //console.log(data);
+                    alert(`success`);
                 }else{
                     const errorData = await response.json();
                     throw new Error(errorData.detail);
