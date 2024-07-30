@@ -29,7 +29,9 @@ BE:
 - Set Up your PostgreSQL database and set its URI in your `database.py`
 - run the API
   ``uvicorn main:app`
+  
 FE:
+
 - Install node
 - Install ``yarn`
 - run ``yarn start`
