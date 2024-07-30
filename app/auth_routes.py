@@ -13,7 +13,7 @@ auth_routes = APIRouter()
 
 @auth_routes.get('/')
 async def  hello():
-    return {"hello mother fucker"}
+    return {"hello"}
 
 @auth_routes.post('/signup',status_code=status.HTTP_201_CREATED)
 async def signup(user:SignUpModel):
