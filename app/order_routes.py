@@ -9,28 +9,19 @@ from schemas import OrderModel,OrderModelStatus
 session=Session(bind=engine)
 order_router = APIRouter()
 
-@order_router.get('/')
-async def hello(authorize:AuthJWT=Depends()):
-
-    try:
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong xa thuc duoc token"
+def verify_jwt(authorize:AuthJWT=Depends()):
+        try:
+            authorize.jwt_required()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khong xac thuc duoc token"
         )
-    return {"Message":"Hello"}
-
+        # tra ve thong tin nguoi dung tu jwt
+        return authorize.get_jwt_subject()
+    
 @order_router.post('/order',status_code=status.HTTP_201_CREATED)
-async def place_an_order(order:OrderModel,authorize:AuthJWT=Depends()):
-    try:
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong xac thuc duoc token"
-        )
-    current_user = authorize.get_jwt_subject()
+async def place_an_order(order:OrderModel,current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first()
 
     new_order=Order(
@@ -52,15 +43,7 @@ async def place_an_order(order:OrderModel,authorize:AuthJWT=Depends()):
     return jsonable_encoder(response)
 
 @order_router.post('/order_all')
-async def list_all_orders(authorize:AuthJWT=Depends()):
-    try:
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong xac thuc duoc token"
-        )
-    current_user = authorize.get_jwt_subject()
+async def list_all_orders(current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first()
     if user.is_staff:
         orders = session.query(Order).all()
@@ -72,16 +55,7 @@ async def list_all_orders(authorize:AuthJWT=Depends()):
         )
 # lay order theo id (lay 01 order khi da biet id)
 @order_router.get('/order/{id}')
-async def get_order_by_id(id:int,authorize:AuthJWT=Depends()):
-    print(f"Received ID: {id}")
-    try: #check token
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong xac thuc duoc token"
-        )
-    current_user = authorize.get_jwt_subject()
+async def get_order_by_id(id:int,current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first()
     if not user or not user.is_staff: #check phai la nhan vien khong
         raise HTTPException(
@@ -98,15 +72,7 @@ async def get_order_by_id(id:int,authorize:AuthJWT=Depends()):
 
 # lay order theo user
 @order_router.get('/user/order')
-async def get_user_orders(authorize:AuthJWT=Depends()):
-    try: #check token
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Khong xac thuc duoc token"
-            )
-    current_user = authorize.get_jwt_subject()
+async def get_user_orders(current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first() # lay thong tin kh theo token
     if not user:
         raise HTTPException(
@@ -118,15 +84,8 @@ async def get_user_orders(authorize:AuthJWT=Depends()):
 
 #update order
 @order_router.put('/order/update/{order_id}/')
-async def update_order(id:int,order:OrderModel,authorize:AuthJWT=Depends()):
-    try: #check token
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Khong xac thuc duoc token"
-            )
-    current_user = authorize.get_jwt_subject()
+async def update_order(id:int,order:OrderModel,current_user: str = Depends(verify_jwt)):
+
     order_to_update = session.query(Order).filter(Order.id==id).first() #lay order theo id
     if not order_to_update:
         raise HTTPException(
@@ -142,15 +101,7 @@ async def update_order(id:int,order:OrderModel,authorize:AuthJWT=Depends()):
 
 # update order status
 @order_router.put('/order/status/{order_id}/')
-async def update_order_status(id:int,order:OrderModelStatus,authorize:AuthJWT=Depends()):
-    try: #check token
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Khong xac thuc duoc token"
-            )
-    current_user = authorize.get_jwt_subject()
+async def update_order_status(id:int,order:OrderModelStatus,current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first()
     if not user or not user.is_staff: #check phai la nhan vien khong
         raise HTTPException(
@@ -173,15 +124,7 @@ async def update_order_status(id:int,order:OrderModelStatus,authorize:AuthJWT=De
     return jsonable_encoder(response)
 
 @order_router.delete('/order/delete/{id}/',status_code=status.HTTP_204_NO_CONTENT)
-async def delete_order(id:int,authorize:AuthJWT=Depends()):
-    try: #check token
-        authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Khong xac thuc duoc token"
-            )
-    current_user = authorize.get_jwt_subject()
+async def delete_order(id:int,current_user: str = Depends(verify_jwt)):
     user = session.query(User).filter(User.username==current_user).first()
     if not user:
         raise HTTPException(
