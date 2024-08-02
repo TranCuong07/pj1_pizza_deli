@@ -1,13 +1,13 @@
 from fastapi import APIRouter,status,Depends
-from database import Session,engine
+from database import get_db
 from schemas import SignUpModel, LoginModel
 from models import User
 from fastapi.exceptions import HTTPException
 from werkzeug.security import generate_password_hash, check_password_hash
 from fastapi_jwt_auth import AuthJWT
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import session
 
-session=Session(bind=engine)
 
 auth_routes = APIRouter()
 
@@ -16,14 +16,14 @@ async def  hello():
     return {"hello"}
 
 @auth_routes.post('/signup',status_code=status.HTTP_201_CREATED)
-async def signup(user:SignUpModel):
-    db_email = session.query(User).filter(User.email == user.email).first()
+async def signup(user:SignUpModel,db:session = Depends(get_db)):
+    db_email = db.query(User).filter(User.email == user.email).first()
     if db_email is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Tai khoan mail da ton tai"                  
                             )
     
-    db_username = session.query(User).filter(User.username == user.username).first()
+    db_username = db.query(User).filter(User.username == user.username).first()
 
     if db_username is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -37,16 +37,16 @@ async def signup(user:SignUpModel):
         is_staff = user.is_staff
     )
 
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     return new_user
 
 #login
 @auth_routes.post('/login',status_code=200)
-async def login(user:LoginModel,authorize:AuthJWT=Depends()):
+async def login(user:LoginModel,authorize:AuthJWT=Depends(),db:session = Depends(get_db)):
     try:
-        db_user = session.query(User).filter(User.username == user.username).first()
+        db_user = db.query(User).filter(User.username == user.username).first()
         if db_user and check_password_hash(db_user.password,user.password):
             access_token = authorize.create_access_token(subject=db_user.username)
             refresh_token = authorize.create_refresh_token(subject=db_user.username)
@@ -67,7 +67,7 @@ async def login(user:LoginModel,authorize:AuthJWT=Depends()):
                             )
 
 @auth_routes.get('/refresh')
-async def refresh(authorize: AuthJWT = Depends()):
+async def refresh(authorize: AuthJWT = Depends(),):
     try:
         authorize.jwt_refresh_token_required()
         current_user = authorize.get_jwt_subject()
