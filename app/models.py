@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey,DECIMAL,JSON, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from sqlalchemy_utils.types import ChoiceType
+import datetime
 
 class User(Base):
     __tablename__ = "user" #tao bang user
@@ -16,29 +17,41 @@ class User(Base):
     def __repr__(self):
         return f"<User {self.username}?"
 
+class Category(Base):
+    __tablename__ = "category" #tao Category
+    id = Column(Integer,primary_key=True, default = 'cuid()')
+    createdAt = Column(DateTime, default = datetime.datetime.utcnow)
+    title = Column (String)
+    desc = Column(String)
+    color = Column(String)
+    img = Column(String)
+    slug = Column(String, unique=True)
+    product = relationship('Product',back_populates='category') #tao moi lien ket
+
+class Product(Base):
+    __tablename__ = "product" #tao Product
+    id = Column(Integer,primary_key=True, default = 'cuid()')
+    createdAt = Column(DateTime, default = datetime.datetime.utcnow)
+    title = Column (String)
+    desc = Column(String)
+    img = Column(String)
+    price = Column(DECIMAL)
+    isFeatured = Column(Boolean, default= False)
+    options = Column(JSON)
+    category_id = Column(Integer, ForeignKey('category.id'))
+    category = relationship('Category',back_populates='product') #tao moi lien ket 
+
 class Order(Base):
-    #tao mot so value mac dinh
-    ORDER_STATUS = [
-        ('PENDING', 'pending'),
-        ('IN-TRANSIT', 'in-transit'),
-        ('DELIVERED', 'delivered')
-    ]
+    __tablename__ = "orders" #tao Product
+    id = Column(Integer,primary_key=True, default = 'cuid()')
+    createdAt = Column(DateTime, default = datetime.datetime.utcnow)
+    price = Column(DECIMAL)
+    products = Column(JSON)
+    status = Column(String)
+    intent_id = Column(String, unique=True, nullable=True)
+    user_id = Column(Integer, ForeignKey('user.id'))
 
-    PIZZA_SIZE = [
-        ('SMALL', 'small'),
-        ('MEDIUM', 'medium'),
-        ('LARGE', 'large'),
-        ('EXTRA-LARGE', 'extra-large')
-    ]
-
-    __tablename__ = "orders" #tao bang orders
-    id = Column(Integer,primary_key=True)
-    quantity = Column(Integer)
-    order_status = Column(ChoiceType(choices=ORDER_STATUS),default="PENDING")
-    pizza_size = Column(ChoiceType(choices=PIZZA_SIZE),default="SMALL")
-    user_id = Column(Integer,ForeignKey('user.id'))
-    user = relationship('User',back_populates='orders') #tao moi lien ket user vs order
-
+    user = relationship("User", back_populates="orders")
 
     def __repr__(self):
         return f"<Order {self.id}>"
