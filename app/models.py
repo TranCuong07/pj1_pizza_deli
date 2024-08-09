@@ -28,6 +28,10 @@ class Category(Base):
     slug = Column(String, unique=True)
     product = relationship('Product',back_populates='category') #tao moi lien ket
 
+    def __repr__(self):
+        return f"<Category(title={self.title}, slug={self.slug}, img={self.img}, desc={self.desc}, color={self.color})>"
+
+
 class Product(Base):
     __tablename__ = "product" #tao Product
     id = Column(Integer,primary_key=True, default = 'cuid()')
