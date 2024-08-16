@@ -1,7 +1,6 @@
 from fastapi import APIRouter,Depends,status
 from fastapi.exceptions import HTTPException
 from fastapi_jwt_auth import AuthJWT
-from models import User,Order
 from database import get_db
 from fastapi.encoders import jsonable_encoder
 from schemas import OrderModel,OrderModelStatus
