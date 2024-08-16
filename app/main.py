@@ -1,6 +1,7 @@
 from fastapi import FastAPI,Depends
 from order_routes import order_router
 from auth_routes import auth_routes
+from category import category_router
 from fastapi_jwt_auth import AuthJWT
 from schemas import Setting
 import re
@@ -9,6 +10,7 @@ from fastapi.routing import APIRoute
 from fastapi.openapi.utils import get_openapi
 from bearer import custom_openapi
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 app = FastAPI()
@@ -34,3 +36,4 @@ def get_config():
 
 app.include_router(order_router, prefix="/order")
 app.include_router(auth_routes, prefix="/auth")
+app.include_router(category_router, prefix="/category")
