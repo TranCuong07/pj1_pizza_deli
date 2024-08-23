@@ -1,43 +1,50 @@
 # Pizza Delivery API - Version 1.0
 
 **OpenAPI Specification:** [OAS 3.1](./openapi.json)  
-**Description:** This is a REST API for a Pizza Delivery Service built for learning, with a back end using FastAPI, SQLAlchemy, and PostgreSQL, and a front end currently being enhanced using React.
+**Description:** This REST API is designed for a Pizza Delivery Service, with a backend built using FastAPI, SQLAlchemy, and PostgreSQL. The frontend is being enhanced using React.
 
 ## Endpoints
 
 ### Order Management
 
-| METHOD  | ROUTE                               | FUNCTIONALITY           |
-|---------|-------------------------------------|-------------------------|
-| **POST** | `/order/order`                     | _Place an Order_        |
-| **POST** | `/order/order_all`                 | _List All Orders_       |
-| **GET**  | `/order/order/{id}`                | _Get Order by ID_       |
-| **GET**  | `/order/user/order`                | _Get User's Orders_     |
-| **PUT**  | `/order/order/update/{order_id}/`  | _Update an Order_       |
-| **PUT**  | `/order/order/status/{order_id}/`  | _Update Order Status_   |
-| **DELETE** | `/order/order/delete/{id}/`      | _Delete an Order_       |
+| METHOD     | ROUTE                             | FUNCTIONALITY       |
+| ---------- | --------------------------------- | ------------------- |
+| **POST**   | `/order/order`                    | Place an Order      |
+| **POST**   | `/order/order_all`                | List All Orders     |
+| **GET**    | `/order/order/{id}`               | Get Order by ID     |
+| **GET**    | `/order/user/order`               | Get User's Orders   |
+| **PUT**    | `/order/order/update/{order_id}/` | Update an Order     |
+| **PUT**    | `/order/order/status/{order_id}/` | Update Order Status |
+| **DELETE** | `/order/order/delete/{id}/`       | Delete an Order     |
 
 ### Authentication
 
-| METHOD  | ROUTE                               | FUNCTIONALITY             |
-|---------|-------------------------------------|---------------------------|
-| **GET**  | `/auth/login/google`               | _Login with Google_       |
-| **GET**  | `/auth/login/google/callback`      | _Google Login Callback_   |
-| **GET**  | `/auth/refresh`                    | _Refresh Token_           |
+| METHOD  | ROUTE                         | FUNCTIONALITY         |
+| ------- | ----------------------------- | --------------------- |
+| **GET** | `/auth/login/google`          | Login with Google     |
+| **GET** | `/auth/login/google/callback` | Google Login Callback |
+| **GET** | `/auth/refresh`               | Refresh Token         |
 
 ### Category Management
 
-| METHOD  | ROUTE                                | FUNCTIONALITY             |
-|---------|--------------------------------------|---------------------------|
-| **GET**  | `/category/category`                | _List Categories_         |
-| **GET**  | `/category/product_category/{slug}` | _Get Products by Category_|
-| **GET**  | `/category/products`                | _List All Products_       |
+| METHOD  | ROUTE                               | FUNCTIONALITY            |
+| ------- | ----------------------------------- | ------------------------ |
+| **GET** | `/category/category`                | List Categories          |
+| **GET** | `/category/product_category/{slug}` | Get Products by Category |
+| **GET** | `/category/products`                | List All Products        |
+
+### Product Management
+
+| METHOD  | ROUTE                     | FUNCTIONALITY     |
+| ------- | ------------------------- | ----------------- |
+| **GET** | `/products/products`      | List All Products |
+| **GET** | `/products/products/{id}` | Get Product by ID |
 
 ## Schemas
 
-| SCHEMA                | DESCRIPTION                                |
-|-----------------------|--------------------------------------------|
-| **HTTPValidationError** | _Schema for handling validation errors._ |
-| **OrderModel**          | _Schema representing the order model._   |
-| **OrderModelStatus**    | _Schema for order status._               |
-| **ValidationError**     | _Schema for validation error details._   |
+| SCHEMA                  | DESCRIPTION                           |
+| ----------------------- | ------------------------------------- |
+| **HTTPValidationError** | Schema for handling validation errors |
+| **OrderModel**          | Schema representing the order model   |
+| **OrderModelStatus**    | Schema for order status               |
+| **ValidationError**     | Schema for validation error details   |

@@ -10,7 +10,7 @@ const Featured = () => {
     const fetchProducts = async () => {
       try {
         const reponse = await axios.get(
-          "http://localhost:8000/category/products"
+          "http://localhost:8000/products/products"
         );
         setProducts(reponse.data);
       } catch (error) {
