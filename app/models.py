@@ -1,10 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey,DECIMAL,JSON, DateTime,Numeric,Text,UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey,DECIMAL,JSON, DateTime,Numeric,Text,UniqueConstraint,Enum
 from sqlalchemy.orm import relationship
 from database import Base
 from sqlalchemy_utils.types import ChoiceType
 import datetime
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+import enum
+
+
 
 class Category(Base):
     __tablename__ = "category" #tao Category
@@ -16,6 +19,12 @@ class Category(Base):
     img = Column(String)
     slug = Column(String, unique=True)
     product = relationship('Product',back_populates='category') #tao moi lien ket
+
+class PaymentStatus(enum.Enum):
+    UNPAID = "Unpaid"
+    PAID = "Paid"
+    CANCELLED = "Cancelled"
+    REFUNDED = "Refunded"
 
 class Product(Base):
     __tablename__ = "product" #tao Product
@@ -38,26 +47,19 @@ class Order(Base):
     price = Column(Numeric)
     products = Column(JSON)
     status = Column(String)
+    payment_status = Column(Enum(PaymentStatus), default=PaymentStatus.UNPAID, nullable=False)
     intent_id = Column(String, unique=True, nullable=True)
     user_email = Column(String, ForeignKey('user.email'), nullable=False)
     
     # Mối quan hệ với User, sử dụng back_populates
     user = relationship('User', back_populates='orders')
 
-class Session(Base):
-    __tablename__ = 'session'
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_token = Column(String, unique=True, nullable=False)
-    user_id = Column(String, ForeignKey('user.id'), nullable=False)
-    expires = Column(DateTime, nullable=False)
 
-    user = relationship('User', back_populates='sessions')
 
 class User(Base):
     __tablename__ = 'user'
     
-    id = Column(String, primary_key=True, default='cuid')
+    id = Column(String, primary_key=True, default='cuid')  # Sử dụng String cho ID
     name = Column(String, nullable=True)
     email = Column(String, unique=True, nullable=True)
     email_verified = Column(DateTime, nullable=True)
@@ -67,6 +69,17 @@ class User(Base):
     accounts = relationship('Account', back_populates='user')
     sessions = relationship('Session', back_populates='user')
     orders = relationship('Order', back_populates='user')
+
+class Session(Base):
+    __tablename__ = 'session'
+    
+    id = Column(String, primary_key=True, default='cuid')  # Sử dụng String cho ID
+    session_token = Column(String, unique=True, nullable=False)
+    user_id = Column(String, ForeignKey('user.id'), nullable=False)  # Sử dụng String cho FK
+    expires = Column(DateTime, nullable=False)
+
+    user = relationship('User', back_populates='sessions')
+
 
 class Account(Base):
     __tablename__ = 'account'

@@ -29,9 +29,21 @@ export type CartType = {
   products: CartItemType[];
   totalItems: number;
   totalPrice: number;
+  qrCodeUrl: string;
 };
 
 export type ActionTypes = {
   addToCart: (item: CartItemType) => void;
   removeFromCart: (item: CartItemType) => void;
+  setQrCodeUrl: (url: string) => void;
+};
+
+export type OrderType = {
+  id: string;
+  userEmail: string;
+  desc?: string;
+  status: string;
+  price: number;
+  createdAt: Date;
+  products: CartItemType[];
 };

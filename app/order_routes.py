@@ -1,59 +1,124 @@
-from fastapi import APIRouter,Depends,status
+from fastapi import APIRouter,Depends,status, Request
 from fastapi.exceptions import HTTPException
 from fastapi_jwt_auth import AuthJWT
 from database import get_db
 from fastapi.encoders import jsonable_encoder
-from schemas import OrderModel,OrderModelStatus
+from schemas import OrderModel,OrderModelStatus,OrderCreateModel,OrderModel,CartData
 from sqlalchemy.orm import session
+from typing import List
+from seapay import (SO_TAI_KHOAN,NGAN_HANG,TEMPLATE,DOWNLOAD)
 
 order_router = APIRouter()
 
-def verify_jwt(authorize:AuthJWT=Depends()):
-        try:
-            authorize.jwt_required()
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Khong xac thuc duoc token"
+# def verify_jwt(authorize:AuthJWT=Depends()):
+#         try:
+#             authorize.jwt_required()
+#         except Exception as e:
+#             raise HTTPException(
+#                 status_code=status.HTTP_401_UNAUTHORIZED,
+#                 detail="Khong xac thuc duoc token"
+#         )
+#         # tra ve thong tin nguoi dung tu jwt
+#         return authorize.get_jwt_subject()
+
+def verify_jwt(authorize: AuthJWT = Depends()):
+
+    try:
+        # Kiểm tra và xác minh token từ cookie
+        authorize.jwt_required()
+        
+        # Lấy thông tin từ JWT sau khi xác thực thành công
+        user_id = authorize.get_jwt_subject()
+        print(f"User ID from Token: {user_id}")
+
+        return user_id
+    except Exception as e:
+        print(f"JWT Verification Error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Khong xac thuc duoc token"
         )
-        # tra ve thong tin nguoi dung tu jwt
-        return authorize.get_jwt_subject()
+
     
+# @order_router.post('/order',status_code=status.HTTP_201_CREATED)
+# async def place_an_order1(order:OrderModel,current_user: str = Depends(verify_jwt),
+#     db: session = Depends(get_db)):
+#     user = db.query(User).filter(User.username==current_user).first()
+
+#     new_order=Order(
+#         quantity = order.quantity,
+#         pizza_size = order.pizza_size,
+#     )
+
+#     new_order.user = user
+#     db.add(new_order)
+#     db.commit()
+#     db.refresh(new_order)
+    
+#     response= {
+#         "pizza_size":new_order.pizza_size,
+#         "quantity":new_order.quantity,
+#         "order_status":new_order.order_status,
+#         "user_id":new_order.user_id
+#     }
+#     return jsonable_encoder(response)
+
 @order_router.post('/order',status_code=status.HTTP_201_CREATED)
-async def place_an_order(order:OrderModel,current_user: str = Depends(verify_jwt),
+async def place_an_order(order:OrderCreateModel,current_user: str = Depends(verify_jwt),
     db: session = Depends(get_db)):
     user = db.query(User).filter(User.username==current_user).first()
 
-    new_order=Order(
-        quantity = order.quantity,
-        pizza_size = order.pizza_size,
+    new_order = Order(
+
+        id=str(uuid4()),
+        price = order.price,
+        products = order.products,
+        user_email = order.user_email,
+        payment_status = order.payment_status
     )
 
     new_order.user = user
     db.add(new_order)
     db.commit()
     db.refresh(new_order)
-    
+
     response= {
-        "pizza_size":new_order.pizza_size,
-        "quantity":new_order.quantity,
-        "order_status":new_order.order_status,
-        "user_id":new_order.user_id
+        "price":new_order.price,
+        "products":new_order.products,
+        "user_email":new_order.user_email,
+        "payment_status":new_order.payment_status
     }
     return jsonable_encoder(response)
 
-@order_router.post('/order_all')
+@order_router.post('/qr-code',status_code=status.HTTP_201_CREATED)
+async def created_qr(cart_data:CartData,request: Request,current_user: str = Depends(verify_jwt),db: session = Depends(get_db)):
+    print(f"Request Headers: {request.headers}")
+    user = db.query(User).filter(User.username==current_user).first()
+    if not user:
+            raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="vui long dang nhap"
+        )
+    else:
+        SO_TIEN = cart_data.totalPrice
+        NOI_DUNG = cart_data.timestamp  
+        payment_url = f"https://qr.sepay.vn/img?acc={SO_TAI_KHOAN}&bank={NGAN_HANG}&amount={SO_TIEN}&des={NOI_DUNG}&template={TEMPLATE}&download={DOWNLOAD}"
+        return {"success": True, "qrCodeUrl": payment_url }
+
+
+
+
+@order_router.post('/order_all',response_model=List[OrderModel])
 async def list_all_orders(current_user: str = Depends(verify_jwt),
     db: session = Depends(get_db)):
     user = db.query(User).filter(User.username==current_user).first()
-    if user.is_staff:
+    if user.is_admin:
         orders = db.query(Order).all()
         return jsonable_encoder(orders)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong phai nhan vien"
-        )
+        orders = db.query(Order).filter(Order.user_email==user_email).all()
+        return jsonable_encoder(orders)
+
 # lay order theo id (lay 01 order khi da biet id)
 @order_router.get('/order/{id}')
 async def get_order_by_id(id:int,current_user: str = Depends(verify_jwt),

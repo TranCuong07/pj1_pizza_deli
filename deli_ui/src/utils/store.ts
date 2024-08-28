@@ -1,4 +1,4 @@
-import { CartType, ActionTypes } from "@/types/types";
+import { CartType, CartItemType, ActionTypes } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -6,6 +6,7 @@ const INITIAL_STATE = {
   products: [],
   totalItems: 0,
   totalPrice: 0,
+  qrCodeUrl: "",
 };
 
 export const useCartStore = create(
@@ -14,21 +15,21 @@ export const useCartStore = create(
       products: INITIAL_STATE.products,
       totalItems: INITIAL_STATE.totalItems,
       totalPrice: INITIAL_STATE.totalPrice,
-      addToCart(item) {
+      qrCodeUrl: INITIAL_STATE.qrCodeUrl,
+      addToCart(item: CartItemType) {
         const products = get().products;
         const productInState = products.find(
           (product) => product.id === item.id
         );
-
         if (productInState) {
           const updatedProducts = products.map((product) =>
             product.id === productInState.id
               ? {
-                  ...item,
-                  quantity: item.quantity + product.quantity,
+                  ...product,
+                  quantity: product.quantity + item.quantity,
                   price: product.price + item.price,
                 }
-              : item
+              : product
           );
           set((state) => ({
             products: updatedProducts,
@@ -43,12 +44,15 @@ export const useCartStore = create(
           }));
         }
       },
-      removeFromCart(item) {
+      removeFromCart(item: CartItemType) {
         set((state) => ({
           products: state.products.filter((product) => product.id !== item.id),
           totalItems: state.totalItems - item.quantity,
           totalPrice: state.totalPrice - item.price,
         }));
+      },
+      setQrCodeUrl(url: string) {
+        set({ qrCodeUrl: url });
       },
     }),
     { name: "cart", skipHydration: true }

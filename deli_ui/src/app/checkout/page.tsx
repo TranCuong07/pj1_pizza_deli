@@ -1,14 +1,30 @@
+"use client";
 import React from "react";
+import { useCartStore } from "@/utils/store";
+import { useEffect } from "react";
 
 const Page = () => {
+  const { products, totalItems, totalPrice, removeFromCart, qrCodeUrl } =
+    useCartStore();
+  // const timestamp = Date.now();
+  useEffect(() => {
+    if (qrCodeUrl) {
+      console.log("Retrieved URL:", qrCodeUrl);
+      // Sử dụng qrCodeUrl cho các mục đích khác
+    } else {
+      console.log("URL is empty or not yet loaded");
+    }
+  }, [qrCodeUrl]);
+
+  useEffect(() => {
+    useCartStore.persist.rehydrate();
+  }, []);
+
   return (
     <div className="flex flex-col items-center my-5 px-2">
-      <div className="w-full max-w-2xl mx-auto">
-        {/* Form tạo đơn hàng. Mặc định hiển thị form này khi vào https://123host.asia/sepay/order.php */}
-        {/* Form tạo đơn hàng */}
-        {/* Hiển thị Giao diện thanh toán (Checkout) khi tạo đơn hàng thành công */}
+      <div className="w-full max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row">
-          <div className="md:w-2/3">
+          <div className="md:w-3/3">
             <h1 className="flex items-center text-2xl font-bold">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -23,7 +39,7 @@ const Page = () => {
               </svg>{" "}
               Đặt hàng thành công
             </h1>
-            <span className="text-gray-500">Mã đơn hàng #DH210</span>
+            <span className="text-gray-500">Mã đơn hàng #DH</span>
             <div
               id="success_pay_box"
               className="p-2 text-center pt-3 border-2 border-black mt-5 hidden"
@@ -51,19 +67,16 @@ const Page = () => {
               className="flex flex-col md:flex-row mt-5 px-2"
               id="checkout_box"
             >
-              <div className="w-full md:w-1/2 text-center my-2 border p-2">
+              <div className="w-full md:w-2/2 text-center my-2 border p-2">
                 <p className="font-bold">
                   Cách 1: Mở app ngân hàng và quét mã QR
                 </p>
                 <div className="my-2">
-                  <img
-                    src="https://qr.sepay.vn/img?bank=MBBank&acc=0903252427&template=compact&amount=3000&des=DH210"
-                    className="w-full"
-                  />
+                  <img src={qrCodeUrl} className="w-full" />
                   <div className="text-center mt-2">
                     <a
                       className="btn btn-outline-primary btn-sm"
-                      href="https://qr.sepay.vn/img?bank=MBBank&acc=0903252427&template=compact&amount=3000&des=DH210&download=true"
+                      href={qrCodeUrl}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -93,69 +106,71 @@ const Page = () => {
                 </p>
                 <div className="text-center">
                   <img
-                    src="https://qr.sepay.vn/assets/img/banklogo/MB.png"
+                    src="https://qr.sepay.vn/assets/img/banklogo/TPB.png"
                     className="w-full max-h-12 mx-auto"
                   />
-                  <p className="font-bold">Ngân hàng MBBank</p>
+                  <p className="font-bold">Ngân hàng TPBank</p>
                 </div>
                 <table className="table-auto w-full">
                   <tbody>
                     <tr>
                       <td>Chủ tài khoản: </td>
                       <td>
-                        <b>Bùi Tấn Việt</b>
+                        <b>Trần Cao Cường</b>
                       </td>
                     </tr>
                     <tr>
                       <td>Số TK: </td>
                       <td>
-                        <b>0903252427</b>
+                        <b>0834431639</b>
                       </td>
                     </tr>
                     <tr>
                       <td>Số tiền: </td>
                       <td>
-                        <b>3,000đ</b>
+                        <b>{totalPrice}đ</b>
                       </td>
                     </tr>
                     <tr>
                       <td>Nội dung CK: </td>
                       <td>
-                        <b>DH210</b>
+                        <b>DH{}</b>
                       </td>
                     </tr>
                   </tbody>
                 </table>
                 <p className="bg-gray-100 p-2">
-                  Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản DH210 để hệ
+                  Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản DH{} để hệ
                   thống tự động xác nhận thanh toán
                 </p>
               </div>
             </div>
           </div>
-          <div className="md:w-1/3 bg-gray-100 border-t p-4">
-            <p className="font-bold">Thông tin đơn hàng</p>
-            <table className="table-auto w-full">
-              <tbody>
-                <tr>
-                  <td>
-                    <span className="font-bold">Kem Merino</span>
-                  </td>
-                  <td className="text-right font-bold">3,000đ</td>
-                </tr>
-                <tr>
-                  <td>Thuế</td>
-                  <td className="text-right">-</td>
-                </tr>
-                <tr>
-                  <td>
-                    <span className="font-bold">Tổng</span>
-                  </td>
-                  <td className="text-right font-bold">3,000đ</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {products.map((item) => (
+            <div className="md:w-1/3 bg-gray-100 border-t p-4">
+              <p className="font-bold">Thông tin đơn hàng</p>
+              <table className="table-auto w-full">
+                <tbody>
+                  <tr>
+                    <td>
+                      <span className="font-bold">{item.title}</span>
+                    </td>
+                    <td className="text-right font-bold">{totalPrice}đ</td>
+                  </tr>
+                  <tr>
+                    <td>Thuế</td>
+                    <td className="text-right">-</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span className="font-bold">Tổng</span>
+                    </td>
+                    <td className="text-right font-bold">{totalPrice}đ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ))}
         </div>
         <div>
           <p className="mt-5">

@@ -97,6 +97,10 @@ async def google_callback(code: str, db: session = Depends(get_db), authorize: A
             user_id=user.id,
             expires=datetime.utcnow() + timedelta(days=1)  # Session expires in 1 day
         )
+        print("User ID:", user.id)
+        print("Session Token:", session_token)
+        print("Session Created:", session)
+
         db.add(session)
         db.commit()
 

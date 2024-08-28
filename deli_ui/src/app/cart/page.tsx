@@ -1,13 +1,74 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/utils/store";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 const CartPage = () => {
-  const { products, totalItems, totalPrice, removeFromCart } = useCartStore();
+  const { products, totalItems, totalPrice, setQrCodeUrl, removeFromCart } =
+    useCartStore();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Sửa đổi kiểu của error
+  const timestamp = Date.now();
+
   useEffect(() => {
     useCartStore.persist.rehydrate();
   }, []);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    setError(null);
+    const cartData = {
+      products,
+      totalPrice,
+      timestamp,
+    };
+
+    try {
+      const token = Cookies.get("access_token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+      console.log("Token:", token); // Kiểm tra xem token có được lấy từ cookie hay không
+      // gui yeu cau tao qr
+      const response = await axios.post(
+        `http://localhost:8000/order/qr-code`,
+        cartData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization: `Bearer ${token}`, // Thêm JWT vào header
+          },
+          withCredentials: true,
+        }
+      );
+      console.log("API Response:", response.data); // Kiểm tra phản hồi từ API
+
+      if (response.data.success) {
+        console.log("QR Code URL:", response.data.qrCodeUrl); // Kiểm tra giá trị URL QR code
+        setQrCodeUrl(response.data.qrCodeUrl); // Lưu URL vào store
+        router.push("/checkout");
+      } else {
+        setError("Failed to generate QR code. Please try again.");
+        toast.error("Failed to generate QR code. Please try again.");
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error))
+        if (error.response && error.response.status === 401) {
+          toast.error("Please log in to proceed with the checkout.");
+        } else {
+          console.error("QR code generation error:", error);
+          setError("An error occurred. Please try again.");
+          toast.error("An error occurred. Please try again.");
+        }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-9rem)] flex flex-col text-red-500 lg:flex-row">
       {/* PRODUCTS CONTAINER */}
@@ -53,7 +114,11 @@ const CartPage = () => {
           <span className="">TOTAL(INCL. VAT)</span>
           <span className="font-bold">${totalPrice}</span>
         </div>
-        <button className="bg-red-500 text-white p-3 rounded-md w-1/2 self-end">
+        <button
+          className="bg-red-500 text-white p-3 rounded-md w-1/2 self-end"
+          onClick={handleCheckout}
+          disabled={loading}
+        >
           CHECKOUT
         </button>
       </div>
