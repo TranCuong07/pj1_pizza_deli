@@ -22,18 +22,15 @@ class SignUpModel(BaseModel):
                 "is_active": True
             }
         }
-
-class Setting(BaseModel):
-    authjwt_secret_key: str ='c81b9060d8051ec08ded9b5e92af08b6521fc975c6b5ac45be0bfff0b5d7ac8a'
-    authjwt_token_location: set = {"cookies"}
-    authjwt_cookie_secure: bool = False  # Set this to False for local development
-    authjwt_cookie_csrf_protect: bool = False  # Tắt bảo vệ CSRF cho cookie trong môi trường phát triển
-
+        
 
 
 class LoginModel(BaseModel):
     username: str
     password: str
+
+
+
 
 class ProductModel(BaseModel):
     id:str
@@ -47,7 +44,7 @@ class ProductModel(BaseModel):
 class CartData(BaseModel):
     products: List[ProductModel]
     totalPrice: float
-    timestamp: str
+    lastUpdated: str
 
 class PaymentStatus(str, Enum):
     UNPAID = "Unpaid"
@@ -89,5 +86,23 @@ class OrderModelStatus(BaseModel):
         }
 
 
-
+class WebhookData (BaseModel):
+    id: Optional[str]
+    gateway : str
+    transaction_date : str
+    accountNumber: str
+    account_number :str
+    sub_account : str
+    amount_in :float
+    amount_out :float
+    accumulated :float
+    code :str
+    transaction_content : str
+    reference_number : str
+    body : str
+    created_at: datetime
+    
+    class Config:
+        orm_mode=True
+    
     

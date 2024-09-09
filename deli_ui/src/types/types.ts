@@ -30,6 +30,7 @@ export type CartType = {
   totalItems: number;
   totalPrice: number;
   qrCodeUrl: string;
+  lastUpdated: number;
 };
 
 export type ActionTypes = {

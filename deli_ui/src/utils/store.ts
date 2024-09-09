@@ -7,6 +7,8 @@ const INITIAL_STATE = {
   totalItems: 0,
   totalPrice: 0,
   qrCodeUrl: "",
+  lastUpdated: 0,
+  email: "",
 };
 
 export const useCartStore = create(
@@ -16,11 +18,14 @@ export const useCartStore = create(
       totalItems: INITIAL_STATE.totalItems,
       totalPrice: INITIAL_STATE.totalPrice,
       qrCodeUrl: INITIAL_STATE.qrCodeUrl,
+      lastUpdated: INITIAL_STATE.lastUpdated,
+      email: INITIAL_STATE.email,
       addToCart(item: CartItemType) {
         const products = get().products;
         const productInState = products.find(
           (product) => product.id === item.id
         );
+        const currentTime = Date.now();
         if (productInState) {
           const updatedProducts = products.map((product) =>
             product.id === productInState.id
@@ -35,20 +40,24 @@ export const useCartStore = create(
             products: updatedProducts,
             totalItems: state.totalItems + item.quantity,
             totalPrice: state.totalPrice + item.price,
+            lastUpdated: currentTime,
           }));
         } else {
           set((state) => ({
             products: [...state.products, item],
             totalItems: state.totalItems + item.quantity,
             totalPrice: state.totalPrice + item.price,
+            lastUpdated: currentTime,
           }));
         }
       },
       removeFromCart(item: CartItemType) {
+        const currentTime = Date.now();
         set((state) => ({
           products: state.products.filter((product) => product.id !== item.id),
           totalItems: state.totalItems - item.quantity,
           totalPrice: state.totalPrice - item.price,
+          lastUpdated: currentTime,
         }));
       },
       setQrCodeUrl(url: string) {

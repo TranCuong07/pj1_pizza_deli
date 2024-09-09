@@ -10,34 +10,53 @@ from seapay import (SO_TAI_KHOAN,NGAN_HANG,TEMPLATE,DOWNLOAD)
 
 order_router = APIRouter()
 
-# def verify_jwt(authorize:AuthJWT=Depends()):
-#         try:
-#             authorize.jwt_required()
-#         except Exception as e:
-#             raise HTTPException(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 detail="Khong xac thuc duoc token"
-#         )
-#         # tra ve thong tin nguoi dung tu jwt
-#         return authorize.get_jwt_subject()
+def verify_jwt(authorize:AuthJWT=Depends()):
+        try:
+             authorize.jwt_required()
+             print("JWT Subject:", authorize.get_jwt_subject())  # In ra thông tin token
+        except Exception as e:
+                print("JWT Subject:", authorize.get_jwt_subject())  # In ra thông tin token
+                raise HTTPException(
+                 status_code=status.HTTP_401_UNAUTHORIZED,
+                 detail="Khong xac thuc duoc token"
+         )
+         # tra ve thong tin nguoi dung tu jwt
+        return authorize.get_jwt_subject()
 
-def verify_jwt(authorize: AuthJWT = Depends()):
+
+
+@order_router.get('/check-cookie')
+def verify_token_from_cookie(request: Request,authorize:AuthJWT=Depends()):
+    token = request.cookies.get("access_token")
+    print(f"Access token from cookie: {token}")
+    if not token:
+        raise HTTPException(status_code=400, detail="Cookie không tồn tại")
 
     try:
-        # Kiểm tra và xác minh token từ cookie
+        authorize._token = token
         authorize.jwt_required()
-        
-        # Lấy thông tin từ JWT sau khi xác thực thành công
         user_id = authorize.get_jwt_subject()
-        print(f"User ID from Token: {user_id}")
-
         return user_id
     except Exception as e:
-        print(f"JWT Verification Error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong xac thuc duoc token"
-        )
+        raise HTTPException(status_code=401, detail=f"Token không hợp lệ: {str(e)}")
+
+# def verify_jwt(authorize: AuthJWT = Depends()):
+
+#     try:
+#         # Kiểm tra và xác minh token từ cookie
+#         authorize.jwt_required()
+        
+#         # Lấy thông tin từ JWT sau khi xác thực thành công
+#         user_id = authorize.get_jwt_subject()
+#         print(f"User ID from Token: {user_id}")
+
+#         return user_id
+#     except Exception as e:
+#         print(f"JWT Verification Error: {str(e)}")
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Khong xac thuc duoc token"
+#         )
 
     
 # @order_router.post('/order',status_code=status.HTTP_201_CREATED)
@@ -64,9 +83,9 @@ def verify_jwt(authorize: AuthJWT = Depends()):
 #     return jsonable_encoder(response)
 
 @order_router.post('/order',status_code=status.HTTP_201_CREATED)
-async def place_an_order(order:OrderCreateModel,current_user: str = Depends(verify_jwt),
+async def place_an_order(order:OrderCreateModel,
     db: session = Depends(get_db)):
-    user = db.query(User).filter(User.username==current_user).first()
+    user = db.query(User).filter(User.email==current_user).first()
 
     new_order = Order(
 
@@ -90,20 +109,14 @@ async def place_an_order(order:OrderCreateModel,current_user: str = Depends(veri
     }
     return jsonable_encoder(response)
 
-@order_router.post('/qr-code',status_code=status.HTTP_201_CREATED)
-async def created_qr(cart_data:CartData,request: Request,current_user: str = Depends(verify_jwt),db: session = Depends(get_db)):
-    print(f"Request Headers: {request.headers}")
-    user = db.query(User).filter(User.username==current_user).first()
-    if not user:
-            raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="vui long dang nhap"
-        )
-    else:
-        SO_TIEN = cart_data.totalPrice
-        NOI_DUNG = cart_data.timestamp  
-        payment_url = f"https://qr.sepay.vn/img?acc={SO_TAI_KHOAN}&bank={NGAN_HANG}&amount={SO_TIEN}&des={NOI_DUNG}&template={TEMPLATE}&download={DOWNLOAD}"
-        return {"success": True, "qrCodeUrl": payment_url }
+# @order_router.post('/qr-code',status_code=status.HTTP_201_CREATED)
+# async def created_qr(cart_data:CartData,authorize: AuthJWT = Depends(verify_jwt)):
+#     user_email = authorize
+#     print("User email from JWT:", user_email)
+#     SO_TIEN = cart_data.totalPrice
+#     NOI_DUNG = cart_data.lastUpdated  
+#     payment_url = f"https://qr.sepay.vn/img?acc={SO_TAI_KHOAN}&bank={NGAN_HANG}&amount={SO_TIEN}&des={NOI_DUNG}&template={TEMPLATE}&download={DOWNLOAD}"
+#     return {"success": True, "qrCodeUrl": payment_url }
 
 
 
@@ -127,7 +140,7 @@ async def get_order_by_id(id:int,current_user: str = Depends(verify_jwt),
     if not user or not user.is_staff: #check phai la nhan vien khong
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Khong phai nhan vien"
+            detail="vui long dang nhap"
         )
     order = db.query(Order).filter(Order.id==id).first() #lay order theo id
     if not order:

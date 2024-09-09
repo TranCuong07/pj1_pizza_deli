@@ -4,8 +4,14 @@ import { useCartStore } from "@/utils/store";
 import { useEffect } from "react";
 
 const Page = () => {
-  const { products, totalItems, totalPrice, removeFromCart, qrCodeUrl } =
-    useCartStore();
+  const {
+    products,
+    totalItems,
+    totalPrice,
+    removeFromCart,
+    qrCodeUrl,
+    lastUpdated,
+  } = useCartStore();
   // const timestamp = Date.now();
   useEffect(() => {
     if (qrCodeUrl) {
@@ -39,7 +45,7 @@ const Page = () => {
               </svg>{" "}
               Đặt hàng thành công
             </h1>
-            <span className="text-gray-500">Mã đơn hàng #DH</span>
+            <span className="text-gray-500">Mã đơn hàng #{lastUpdated}</span>
             <div
               id="success_pay_box"
               className="p-2 text-center pt-3 border-2 border-black mt-5 hidden"
@@ -134,14 +140,14 @@ const Page = () => {
                     <tr>
                       <td>Nội dung CK: </td>
                       <td>
-                        <b>DH{}</b>
+                        <b>DH{lastUpdated}</b>
                       </td>
                     </tr>
                   </tbody>
                 </table>
                 <p className="bg-gray-100 p-2">
-                  Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản DH{} để hệ
-                  thống tự động xác nhận thanh toán
+                  Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản DH
+                  {lastUpdated} để hệ thống tự động xác nhận thanh toán
                 </p>
               </div>
             </div>

@@ -8,12 +8,25 @@ import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 
 const CartPage = () => {
-  const { products, totalItems, totalPrice, setQrCodeUrl, removeFromCart } =
-    useCartStore();
+  const {
+    products,
+    totalItems,
+    totalPrice,
+    setQrCodeUrl,
+    removeFromCart,
+    lastUpdated,
+  } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null); // Sửa đổi kiểu của error
   const timestamp = Date.now();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = Cookies.get("access_token");
+    setIsLoggedIn(!!token);
+    console.log(token);
+  }, []);
 
   useEffect(() => {
     useCartStore.persist.rehydrate();
@@ -25,49 +38,76 @@ const CartPage = () => {
     const cartData = {
       products,
       totalPrice,
-      timestamp,
+      lastUpdated,
     };
-
-    try {
-      const token = Cookies.get("access_token");
-      if (!token) {
-        throw new Error("No token found");
-      }
-      console.log("Token:", token); // Kiểm tra xem token có được lấy từ cookie hay không
-      // gui yeu cau tao qr
-      const response = await axios.post(
-        `http://localhost:8000/order/qr-code`,
-        cartData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`, // Thêm JWT vào header
-          },
-          withCredentials: true,
-        }
-      );
-      console.log("API Response:", response.data); // Kiểm tra phản hồi từ API
-
-      if (response.data.success) {
-        console.log("QR Code URL:", response.data.qrCodeUrl); // Kiểm tra giá trị URL QR code
-        setQrCodeUrl(response.data.qrCodeUrl); // Lưu URL vào store
-        router.push("/checkout");
-      } else {
-        setError("Failed to generate QR code. Please try again.");
-        toast.error("Failed to generate QR code. Please try again.");
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error))
-        if (error.response && error.response.status === 401) {
-          toast.error("Please log in to proceed with the checkout.");
+    const checkCookie = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/order/check-cookie",
+          {
+            withCredentials: true, // để gửi cookie
+          }
+        );
+        if (response.status === 200) {
+          console.log("Cookie được gửi thành công:", response.data);
         } else {
-          console.error("QR code generation error:", error);
-          setError("An error occurred. Please try again.");
-          toast.error("An error occurred. Please try again.");
+          console.log("Không gửi được cookie.");
         }
-    } finally {
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error("Lỗi khi gửi cookie:", error);
+      }
+    };
+    checkCookie();
+
+    // try {
+    //   if (!isLoggedIn) {
+    //     toast.error("Please log in to proceed with the checkout");
+    //   } else {
+    //     // gui yeu cau tao qr
+    //     const response = await axios.post(
+    //       `http://localhost:8000/order/qr-code`,
+    //       cartData,
+    //       {
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           // Authorization: `Bearer ${token}`, // Thêm JWT vào header
+    //         },
+    //         withCredentials: true,
+    //       }
+    //     );
+    //     // const rp = await axios.post(
+    //     //   `http://localhost:8000/order/qr-code`,
+    //     //   cartData,
+    //     //   {
+    //     //     headers: {
+    //     //       "Content-Type": "application/json",
+    //     //       // Authorization: `Bearer ${token}`, // Thêm JWT vào header
+    //     //     },
+    //     //   }
+    //     // );
+
+    //     console.log("API Response:", response.data); // Kiểm tra phản hồi từ API
+    //     if (response.data.success) {
+    //       // console.log("QR Code URL:", response.data.qrCodeUrl); // Kiểm tra giá trị URL QR code
+    //       setQrCodeUrl(response.data.qrCodeUrl); // Lưu URL vào store
+    //       router.push("/checkout");
+    //     } else {
+    //       setError("Failed to generate QR code. Please try again.");
+    //       toast.error("Failed to generate QR code. Please try again.");
+    //     }
+    //   }
+    // } catch (error: unknown) {
+    //   if (axios.isAxiosError(error))
+    //     if (error.response && error.response.status === 401) {
+    //       toast.error("Please log in to proceed with the checkout.");
+    //     } else {
+    //       console.error("QR code generation error:", error);
+    //       setError("An error occurred. Please try again.");
+    //       toast.error("An error occurred. Please try again.");
+    //     }
+    // } finally {
+    //   setLoading(false);
+    // }
   };
   return (
     <div className="h-[calc(100vh-6rem)] md:h-[calc(100vh-9rem)] flex flex-col text-red-500 lg:flex-row">
